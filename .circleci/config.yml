@@ -2,7 +2,7 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      IMAGE_NAME: nyankoye/app_circleci
+      IMAGE_NAME: nyankoye/oc_lettings_project
     docker:
       - image: circleci/buildpack-deps:stretch
 jobs:
@@ -20,7 +20,7 @@ jobs:
           name: Run unit tests
           command: |
             python manage.py test
-  build:
+  build-docker:
     executor: docker-publisher
     steps:
       - checkout
@@ -36,7 +36,7 @@ jobs:
           root: .
           paths:
             - ./image.tar
-  publish-tag:
+  publish-docker:
     executor: docker-publisher
     steps:
       - attach_workspace:
@@ -59,30 +59,32 @@ workflows:
         filters:
             branches:
               only: master
-      - build:
+      - build-docker:
+          requires:
+                - run_tests
           filters:
             branches:
               only: master
-      - publish-tag:
+      - publish-docker:
           requires:
             - run_tests
-            - build
+            - build-docker
           filters:
             branches:
               only: master
   docker-publish:
     jobs:
       - run_tests
-      - build:
+      - build-docker:
           filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - publish-tag:
+      - publish-docker:
           requires:
             - run_tests
-            - build
+            - build-docker
           filters:
             tags:
               only: /^v.*/
