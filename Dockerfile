@@ -3,4 +3,4 @@ WORKDIR /oc_lettings_project
 ADD ./requirements.txt .
 RUN pip install -r requirements.txt
 ADD . .
-CMD ["python", "manage.py", "runserver"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:$PORT"]
