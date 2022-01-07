@@ -7,7 +7,7 @@ executors:
       - image: circleci/buildpack-deps:stretch
 jobs:
   deployment-to-heroku:
-    machine: true
+    machine: docker
     steps:
       - checkout
       - run:
