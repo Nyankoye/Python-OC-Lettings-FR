@@ -6,19 +6,6 @@ executors:
     docker:
       - image: circleci/buildpack-deps:stretch
 jobs:
-  deployment-to-heroku:
-    machine:
-      - image: circleci/node:14.17.3-buster-browsers
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run:
-          name: Deployed Docker image to Heroku
-          commands:
-            - docker login --email=$HEROKU_LOGIN --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
-            - docker tag $IMAGE_NAME:$IMAGE_TAG registry.heroku.com/$APP_NAME/web
-            - docker push registry.heroku.com/$APP_NAME/web
   run_tests:
     docker:
       - image: circleci/python:3.9-bullseye-node-browsers-legacy
@@ -65,6 +52,17 @@ jobs:
             IMAGE_TAG="0.0.${CIRCLE_BUILD_NUM}"
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
             docker push $IMAGE_NAME:$IMAGE_TAG
+  deployment-to-heroku:
+      machine: true
+      steps:
+        - checkout
+        - run:
+            name: Build and push Docker image to Heroku
+            command: |
+              sudo curl https://cli-assets.heroku.com/install.sh | sh
+              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:login
+              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:push -a $APP_NAME web
+              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:release -a $APP_NAME web
 workflows:
   docker-build-and-tests:
     jobs:
