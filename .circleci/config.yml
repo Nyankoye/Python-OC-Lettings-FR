@@ -24,10 +24,8 @@ jobs:
     executor: docker-publisher
     steps:
       - checkout
-      - checkout
       - setup_remote_docker:
-          #available on performance plan
-          docker_layer_caching: true
+        docker_layer_caching: true
       - run:
           name: Build Docker image
           command: |
@@ -54,27 +52,28 @@ jobs:
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             IMAGE_TAG="0.0.${CIRCLE_BUILD_NUM}"
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
-            docker push $IMAGE_NAME:latest
             docker push $IMAGE_NAME:$IMAGE_TAG
 workflows:
-  build-test:
+  docker-build-and-tests:
     jobs:
-      - run_tests
-  docker-build:
-    jobs:
+      - run_tests:
+        filters:
+            branches:
+              only: master
       - build:
           filters:
             branches:
-              only: main
+              only: master
       - publish-tag:
           requires:
             - run_tests
             - build
           filters:
             branches:
-              only: main
+              only: master
   docker-publish:
     jobs:
+      - run_tests
       - build:
           filters:
             tags:
