@@ -8,14 +8,14 @@ executors:
 jobs:
   deployment-to-heroku:
     machine:
-      -  image: circleci/node:14.17.3-buster-browsers
+      - image: circleci/node:14.17.3-buster-browsers
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
           name: Deployed Docker image to Heroku
-          commands: |
+          commands:
             - docker login --email=$HEROKU_LOGIN --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
             - docker tag $IMAGE_NAME:$IMAGE_TAG registry.heroku.com/$APP_NAME/web
             - docker push registry.heroku.com/$APP_NAME/web
