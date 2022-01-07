@@ -59,7 +59,7 @@ jobs:
         - run:
             name: Deployed Docker image in Heroku
             command: |
-              - docker login --email=$HEROKU_LOGIN --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+              - docker login --username=$DOCKERHUB_USERNAME --password=$(heroku auth:token) registry.heroku.com
               - docker tag $IMAGE_NAME:$IMAGE_TAG registry.heroku.com/$APP_NAME/web
               - docker push registry.heroku.com/$APP_NAME/web
 workflows:
