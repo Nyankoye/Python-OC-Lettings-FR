@@ -57,12 +57,11 @@ jobs:
       steps:
         - checkout
         - run:
-            name: Build and push Docker image to Heroku
+            name: Deployed Docker image in Heroku
             command: |
-              sudo curl https://cli-assets.heroku.com/install.sh | sh
-              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:login
-              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:push -a $APP_NAME web
-              HEROKU_API_KEY=${HEROKU_TOKEN} heroku container:release -a $APP_NAME web
+              - docker login --email=$HEROKU_LOGIN --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+              - docker build --rm=false -t registry.heroku.com/$APP_NAME/web .
+              - docker push registry.heroku.com/$APP_NAME/web:latest
 workflows:
   docker-build-and-tests:
     jobs:
