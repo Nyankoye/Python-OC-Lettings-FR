@@ -52,13 +52,20 @@ jobs:
             IMAGE_TAG="0.0.${CIRCLE_BUILD_NUM}"
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
             docker push $IMAGE_NAME:$IMAGE_TAG
+  deployment-to-heroku:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Deployed Docker image to Heroku
+          commands: |
+            - docker login --email=$HEROKU_LOGIN --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            - docker tag $IMAGE_NAME:$IMAGE_TAG registry.heroku.com/$APP_NAME/web
+            - docker push registry.heroku.com/$APP_NAME/web
 workflows:
   docker-build-and-tests:
     jobs:
-      - run_tests:
-        filters:
-            branches:
-              only: master
+      - run_tests
       - build-docker:
           requires:
                 - run_tests
@@ -69,6 +76,12 @@ workflows:
           requires:
             - run_tests
             - build-docker
+          filters:
+            branches:
+              only: master
+      - deployment-to-heroku:
+          requires:
+            - publish-docker
           filters:
             branches:
               only: master
