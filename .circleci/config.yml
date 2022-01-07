@@ -75,7 +75,6 @@ workflows:
               only: master
       - publish-docker:
           requires:
-            - run_tests
             - build-docker
           filters:
             branches:
@@ -97,7 +96,6 @@ workflows:
               ignore: /.*/
       - publish-docker:
           requires:
-            - run_tests
             - build-docker
           filters:
             tags:
