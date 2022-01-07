@@ -7,9 +7,12 @@ executors:
       - image: circleci/buildpack-deps:stretch
 jobs:
   deployment-to-heroku:
-    machine: docker
+    machine:
+      -  image: circleci/node:14.17.3-buster-browsers
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Deployed Docker image to Heroku
           commands: |
