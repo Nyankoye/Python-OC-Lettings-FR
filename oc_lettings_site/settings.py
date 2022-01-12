@@ -6,7 +6,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sentry_sdk.init(
-    dsn="https://649236292fa24bb4a5b3b876522835b6@o1112589.ingest.sentry.io/6142332",
+    dsn=os.environ.get('SENTRY_DSN', default=''),
     integrations=[DjangoIntegration()],
 
     # Set traces_sample_rate to 1.0 to capture 100%
