@@ -1,77 +1,93 @@
-## Résumé
+# Mise à l'échelle d'une application Django en utilisant une architecture modulaire 
 
-Site web d'Orange County Lettings
+- Site web d'Orange County Lettings
 
-## Développement local
+Ce projet a été forké dans le but de me permettre de developper des competences dans:
+- La mise en place d'un pipline CI/CD en utilisant CircleCI
+- La création d'une image docker
+- Le deploiement d'une image docker sur Heroku
+- La mise en place d'un sytème de controle de code en utilisant sentry
+- La refactorisation d'une application pour reduire les dettes techniques
+- l'application une architecture modulaire dans une application Python
 
-### Prérequis
+#### Pipline CI/CD
+1. A chaque commit sur la branche master le pipline CI/CD va d'abord tester le code, si tout est ok
+2. Il passe à la construction de l'image docker, puis la pousse sur mon docker hub avec un tag representant le numero de commit sur CircleCI
+3. Après ces deux étapes, l'image est ensuite deploiyée sur heroku
+- Vous pouvez consulter [l'application sur heroku](https://oc-lettings-14.herokuapp.com/)
 
-- Compte GitHub avec accès en lecture à ce repository
-- Git CLI
-- SQLite3 CLI
-- Interpréteur Python, version 3.6 ou supérieure
+## Execution du code
+1. Cloner ce dépôt de code à l'aide de la commande: <code>$ git clone https://github.com/Nyankoye/Python-OC-Lettings-FR </code>
+2. Créez un environnement virtuel dans le projet en utilisant la commande: <code> $ python -m venv env </code>
+3. Activer l'environnement <code> source venv/bin/activate </code>
+    - sur windows <code> .\venv\Scripts\activate </code>
+    - Pour désactiver l'environnement, `deactivate`
+4. Installer les paquets Python répertoriés dans le fichier requirements.txt en utilisant la commande : <code>$ pip install -r requirements.txt </code>
+5. Vous deplacez dans le repertoir suivant: <code> cd /path/to/Python-OC-Lettings-FR </code>
+6. Demarrer l'application en utilisant la commande: <code> $ python manage.py runserver </code>
+7. Aller sur `http://localhost:8000` dans un navigateur.
 
-Dans le reste de la documentation sur le développement local, il est supposé que la commande `python` de votre OS shell exécute l'interpréteur Python ci-dessus (à moins qu'un environnement virtuel ne soit activé).
+## Tests unitaires
+Pour lancer les tests unitaires, il vous suffit de:
+- Vous deplacez dans le repertoir suivant: <code> cd /path/to/Python-OC-Lettings-FR </code>
+- Puis utiliser la commande: <code> $ python manage.py test </code>
 
-### macOS / Linux
-
-#### Cloner le repository
-
-- `cd /path/to/put/project/in`
-- `git clone https://github.com/OpenClassrooms-Student-Center/Python-OC-Lettings-FR.git`
-
-#### Créer l'environnement virtuel
-
-- `cd /path/to/Python-OC-Lettings-FR`
-- `python -m venv venv`
-- `apt-get install python3-venv` (Si l'étape précédente comporte des erreurs avec un paquet non trouvé sur Ubuntu)
-- Activer l'environnement `source venv/bin/activate`
-- Confirmer que la commande `python` exécute l'interpréteur Python dans l'environnement virtuel
-`which python`
-- Confirmer que la version de l'interpréteur Python est la version 3.6 ou supérieure `python --version`
-- Confirmer que la commande `pip` exécute l'exécutable pip dans l'environnement virtuel, `which pip`
-- Pour désactiver l'environnement, `deactivate`
-
-#### Exécuter le site
-
-- `cd /path/to/Python-OC-Lettings-FR`
-- `source venv/bin/activate`
-- `pip install --requirement requirements.txt`
-- `python manage.py runserver`
-- Aller sur `http://localhost:8000` dans un navigateur.
-- Confirmer que le site fonctionne et qu'il est possible de naviguer (vous devriez voir plusieurs profils et locations).
-
-#### Linting
-
-- `cd /path/to/Python-OC-Lettings-FR`
-- `source venv/bin/activate`
-- `flake8`
-
-#### Tests unitaires
-
-- `cd /path/to/Python-OC-Lettings-FR`
-- `source venv/bin/activate`
-- `pytest`
-
-#### Base de données
-
-- `cd /path/to/Python-OC-Lettings-FR`
-- Ouvrir une session shell `sqlite3`
-- Se connecter à la base de données `.open oc-lettings-site.sqlite3`
-- Afficher les tables dans la base de données `.tables`
-- Afficher les colonnes dans le tableau des profils, `pragma table_info(Python-OC-Lettings-FR_profile);`
-- Lancer une requête sur la table des profils, `select user_id, favorite_city from
-  Python-OC-Lettings-FR_profile where favorite_city like 'B%';`
-- `.quit` pour quitter
-
-#### Panel d'administration
+## Panel d'administration
 
 - Aller sur `http://localhost:8000/admin`
 - Connectez-vous avec l'utilisateur `admin`, mot de passe `Abc1234!`
 
-### Windows
-
-Utilisation de PowerShell, comme ci-dessus sauf :
-
-- Pour activer l'environnement virtuel, `.\venv\Scripts\Activate.ps1` 
-- Remplacer `which <my-command>` par `(Get-Command <my-command>).Path`
+## Déploiement
+Le déploiement de notre application consistera à la mettre en production notre application sur heroku. Afin qu'elle soit consultable par n'importe qui, pour cela nous allons utiliser docker et heroku 
+1. Intaller [docker](https://docs.docker.com/get-docker/) sur votre machine
+2. Créer un fichier Dockerfile à la source du projet: `/path/to/Python-OC-Lettings-FR`
+    ```
+    FROM python:3.9-bullseye
+    # Prevents Python from writing pyc files to disc
+    ENV PYTHONDONTWRITEBYTECODE 1
+    ENV DEBUG 0
+    WORKDIR /oc_lettings_project
+    ADD ./requirements.txt .
+    RUN pip install -r requirements.txt
+    ADD . .
+    # collect static files 
+    RUN python manage.py collectstatic --noinput
+    CMD gunicorn oc_lettings_site.wsgi:application --bind 0.0.0.0:$PORT
+    ```
+    - PYTHONDONTWRITEBYTECODE : Empêche Python d'écrire des fichiers pyc
+    - `$PORT` est une variable d'environnement de heroku, pendant l'execution de l'image en local il faudra spécifier le port
+3. Ajouter guinicorn dans la liste des module requis
+4. Ajouter whitenoise dans la liste des module requis et modifier les variables d'environnement SECRET_KEY, DEBUG, et ALLOWED_HOSTS dans settings.py :
+    ```
+    SECRET_KEY = os.environ.get('SECRET_KEY', default='foo')
+    DEBUG = int(os.environ.get('DEBUG', default=0))
+    ALLOWED_HOSTS = ["oc-lettings-14.herokuapp.com","localhost","127.0.0.1"]  
+    ```
+5. Modifier middleware dans settings.py pour ajourer Whitenoise
+    ```
+    MIDDLEWARE = [
+    # ...
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # ...
+    ]
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    ```
+    - Configurez la gestion de vos fichiers statiques avec STATIC_ROOT:
+        ```
+        STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+        ```
+6. Construiser et excuter l'image en local: 
+   ``` 
+   docker build -t mon_app .
+   docker run -d -e "PORT=8000" -e "DEBUG=1" -p 8000:8000 mon_app
+   ```
+7. Après avoir fait le Dockerfile, le fichier `config.yml` se trouvant dans le repertoire: `path\Python-OC-Lettings-FR\.circleci` s'occuppera de faire le depoiement de l'application sur heroku après chaque commit sur la branch master 
+- les commandes suivante seront exécuter grâce au fichier de config:
+    ```
+    $ heroku container:login
+    $ heroku container:push -a nom_app web
+    $ heroku container:release -a nom_app web
+    ```
+      
+### Utilisation de l'image docker en local
+- Afin d'executer l'image que j'ai contruit pour deployer l'application sur heroku, utiliser la commande : <code> $ docker run -d -e "PORT=8000" -e "DEBUG=1" -p 8000:8000 nyankoye/oc_lettings_project:0.0.136 </code>
